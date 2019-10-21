@@ -69,30 +69,31 @@ public class MainActivity extends AppCompatActivity {
         String label = getString(R.string.activity_still);
         int icon = R.drawable.still;
 
-        mp = MediaPlayer.create(this, R.raw.beat_02);
-
         switch (type) {
             case DetectedActivity.IN_VEHICLE: {
                 label = getString(R.string.activity_in_vehicle);
                 icon = R.drawable.in_vehicle;
+                mp.release();
                 break;
             }
 
             case DetectedActivity.RUNNING: {
                 label = getString(R.string.activity_running);
                 icon = R.drawable.running;
-                mp.start();
+                playAudio();
                 break;
             }
             case DetectedActivity.STILL: {
                 label = getString(R.string.activity_still);
+                icon = R.drawable.still;
+                mp.release();
                 break;
             }
 
             case DetectedActivity.WALKING: {
                 label = getString(R.string.activity_walking);
                 icon = R.drawable.walking;
-                mp.start();
+                playAudio();
                 break;
             }
 //            case DetectedActivity.UNKNOWN: {
@@ -108,6 +109,13 @@ public class MainActivity extends AppCompatActivity {
             txtConfidence.setText("Confidence: " + confidence);
             imgActivity.setImageResource(icon);
         }
+    }
+
+    private void playAudio(){
+        if (mp == null){
+            mp = MediaPlayer.create(this, R.raw.beat_02);
+        }
+        mp.start();
     }
 
     @Override
