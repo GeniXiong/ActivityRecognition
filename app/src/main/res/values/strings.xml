@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Activity Recognition</string>
+    <string name="activity_in_vehicle">You are in Vehicle</string>
+    <string name="activity_running">You are running</string>
+    <string name="activity_still">You are still</string>
+    <string name="activity_walking">You are walking</string>
+</resources>
