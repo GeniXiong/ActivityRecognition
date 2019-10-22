@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="info.androidhive.activityrecognition">
-
-    <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
+    package="com.cs528.hw3">
 
     <application
         android:allowBackup="true"
@@ -19,14 +17,14 @@
             </intent-filter>
         </activity>
 
-        <!-- Service that provides activity recognition data. Setting the android:exported attribute
-        to "false" stops other apps from starting this service, even when using an explicit
-        intent. -->
         <service
-            android:name=".DetectedActivitiesIntentService"
-            android:exported="false" />
+            android:name=".ActivityIntentService"
+            android:exported="false">
+        </service>
 
-        <service android:name=".BackgroundDetectedActivitiesService"></service>
     </application>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
 
 </manifest>

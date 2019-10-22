@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">Activity Recognition</string>
-    <string name="activity_in_vehicle">You are in Vehicle</string>
-    <string name="activity_running">You are running</string>
-    <string name="activity_still">You are still</string>
-    <string name="activity_walking">You are walking</string>
+    <string name="app_name">hw3</string>
+    <string name="fuller_geo">Visits to Fuller labs geoFence:</string>
+    <string name="library_geo">Visits to Library geoFence:</string>
+    <string name="step_count">Steps taken since app started:</string>
+    <string name="activity_status">You are </string>
 </resources>
