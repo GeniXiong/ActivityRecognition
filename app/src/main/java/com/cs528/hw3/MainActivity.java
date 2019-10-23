@@ -51,13 +51,21 @@ public class MainActivity extends AppCompatActivity implements
     private  Resources res;
     private ActionBL actionBL;
     private  MediaPlayer mediaPlayer;
+    private static TextView stepView;
+    private static Context context;
+    private StepCount stepCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        context = this;
+
         actionBL = new ActionBL(this);
+        stepCount = StepCount.getInstance(this);
+
         userActivity = findViewById(R.id.currentAction);
+        stepView = findViewById(R.id.stepCount);
 
         mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.beat_02);
 
@@ -109,6 +117,9 @@ public class MainActivity extends AppCompatActivity implements
     protected void onResume() {
         super.onResume();
         Log.e("this","onResume called");
+
+        stepCount.startSensor();
+
 
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
                 new IntentFilter(Constants.BROADCAST_DETECTED_ACTIVITY));
@@ -242,8 +253,14 @@ public class MainActivity extends AppCompatActivity implements
                 }
             };
 
+    public static void updateStep(float count){
+        stepView.setText(context.getString(R.string.step_count)+" "+count);
+
+    }
+
     public ActionBL getActionBL(){
         return actionBL;
     }
+
 
 }
