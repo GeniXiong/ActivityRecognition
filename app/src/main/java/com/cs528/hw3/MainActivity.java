@@ -2,9 +2,11 @@ package com.cs528.hw3;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -15,7 +17,9 @@ import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.DetectedActivity;
+import com.google.android.gms.location.GeofencingEvent;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -38,7 +42,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private GoogleMap mMap;
-
+    private GeoHelper helper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,8 +67,67 @@ public class MainActivity extends AppCompatActivity implements
                 }
             }
         };
-
+        checkLocationPermission();
+        Log.i("this","helper start");
+        helper = new GeoHelper();
+        helper.GeoConstructor(this);
+        helper.addGeofence(this);
+        Log.i("this","helper end");
     }
+    ///////////////
+
+    /////test//////
+    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+
+    public boolean checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                new AlertDialog.Builder(this)
+                        .setTitle("fine location permittion")
+                        .setMessage("fine location granted")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                //Prompt the user once explanation has been shown
+                                ActivityCompat.requestPermissions(MainActivity.this,
+                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                        MY_PERMISSIONS_REQUEST_LOCATION);
+                            }
+                        })
+                        .create()
+                        .show();
+
+
+            } else {
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        MY_PERMISSIONS_REQUEST_LOCATION);
+            }
+            return false;
+        } else {
+            return true;
+        }
+    }
+    public void onResult(@NonNull Status status) {
+        Log.i("Geo Translation", "onResult: " + status);
+        if ( status.isSuccess() ) {
+            Log.i("Geo Translation", "success");
+        } else {
+            // inform about fail
+            Log.i("Geo Translation", "failure");
+        }
+    }
+    //////////////////////////////////////////////////
     @Override
     protected void onResume() {
         super.onResume();
@@ -82,8 +145,8 @@ public class MainActivity extends AppCompatActivity implements
     protected void onPause() {
         super.onPause();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
-
     }
+
 
     private PendingIntent getActivityDetectionPendingIntent() {
         Intent intent = new Intent(this, ActivityIntentService.class);
@@ -115,6 +178,7 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
     }
+
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
