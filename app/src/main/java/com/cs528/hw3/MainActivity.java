@@ -8,13 +8,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.location.Location;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.cs528.hw3.database.Action;
+import com.google.android.gms.location.ActivityTransition;
 import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -23,11 +28,16 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 
+import java.io.IOException;
+import java.util.Date;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import static android.os.Build.VERSION_CODES.M;
 
 public class MainActivity extends AppCompatActivity implements
         OnMapReadyCallback {
@@ -35,16 +45,28 @@ public class MainActivity extends AppCompatActivity implements
     private BroadcastReceiver broadcastReceiver;
     private TextView userActivity;
     private UserActionRecognation userAction;
-
+    private ImageView userActivity_img;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private GoogleMap mMap;
-
+    private  Resources res;
+    private ActionBL actionBL;
+    private  MediaPlayer mediaPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        actionBL = new ActionBL(this);
         userActivity = findViewById(R.id.currentAction);
+
+        mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.beat_02);
+
+        userActivity_img = findViewById(R.id.currentActionImage);
+
+        res = getResources();
+        userActivity_img.setImageDrawable(res.getDrawable(R.drawable.still));
+
+        userActivity.setText(getText(R.string.activity_status)+" Still");
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.current_location);
@@ -59,12 +81,30 @@ public class MainActivity extends AppCompatActivity implements
                 Log.e("this","onReceive called");
                 if (intent.getAction().equals(Constants.BROADCAST_DETECTED_ACTIVITY)) {
                     int type = intent.getIntExtra("type", -1);
+                    Action action = actionBL.getAction();
+                    if (action == null) {
+                        Log.e("this","Action is null");
+                        Date date = new Date();
+                        action = new Action(date.getTime(),type);
+                        actionBL.addAction(action);
+                    }
+                    else {
+                        if (action.getAction() != type) {
+                            Date date = new Date();
+                            Action newAct = new Action(date.getTime(), type);
+                            actionBL.addAction(newAct);
+                            Toast.makeText(context,
+                                    "This activity as last " + actionBL.calculateDuringTime(date, new Date(action.getTime())),
+                                    Toast.LENGTH_SHORT)
+                                    .show();
+                        }
+                    }
                     handleActivity(type);
                 }
             }
         };
-
     }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -94,19 +134,27 @@ public class MainActivity extends AppCompatActivity implements
 
         switch (type) {
             case DetectedActivity.IN_VEHICLE: {
-                userActivity.setText(getString(R.string.activity_status)+"In Vehicle");
+                userActivity.setText(getString(R.string.activity_status)+" In Vehicle");
+                userActivity_img.setImageDrawable(res.getDrawable(R.drawable.in_vehicle));
+
                 break;
             }
             case DetectedActivity.RUNNING: {
-                userActivity.setText(getString(R.string.activity_status)+"Running");
+                userActivity.setText(getString(R.string.activity_status)+" Running");
+                userActivity_img.setImageDrawable(res.getDrawable(R.drawable.running));
+                mediaPlayer.start();
                 break;
             }
             case DetectedActivity.STILL: {
-                userActivity.setText(getString(R.string.activity_status)+"Still");
+                userActivity.setText(getString(R.string.activity_status)+" Still");
+                userActivity_img.setImageDrawable(res.getDrawable(R.drawable.still));
+
                 break;
             }
             case DetectedActivity.WALKING: {
-                userActivity.setText(getString(R.string.activity_status)+"Walking");
+                userActivity.setText(getString(R.string.activity_status)+" Walking");
+                userActivity_img.setImageDrawable(res.getDrawable(R.drawable.walking));
+                mediaPlayer.start();
                 break;
             }
             case DetectedActivity.UNKNOWN: {
@@ -193,5 +241,9 @@ public class MainActivity extends AppCompatActivity implements
                     mMap.addCircle(circleOptions);
                 }
             };
+
+    public ActionBL getActionBL(){
+        return actionBL;
+    }
 
 }

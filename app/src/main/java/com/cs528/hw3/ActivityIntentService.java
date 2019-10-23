@@ -32,14 +32,16 @@ public class ActivityIntentService  extends IntentService {
             ActivityTransitionResult result = ActivityTransitionResult.extractResult(intent);
 
             for (ActivityTransitionEvent event : result.getTransitionEvents()) {
-                broadcastActivity(event.getActivityType());
+
+                broadcastActivity(event.getActivityType(),event.getTransitionType());
             }
         }
     }
 
-    private void broadcastActivity(int activity) {
+    private void broadcastActivity(int activity,int transitionType) {
         Intent intent = new Intent(Constants.BROADCAST_DETECTED_ACTIVITY);
         intent.putExtra("type", activity);
+        intent.putExtra("transition", transitionType);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 }

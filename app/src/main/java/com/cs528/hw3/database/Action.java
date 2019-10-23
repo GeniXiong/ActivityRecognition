@@ -3,27 +3,28 @@ package com.cs528.hw3.database;
 import java.sql.Time;
 
 public class Action {
-    private Time time;
-    private String action;
+    private Long time;
+    private int action;
 
-    public Action(Time time, String action) {
+    public Action(Long time, int action) {
         this.time = time;
         this.action = action;
     }
 
-    public Time getTime() {
+    public Long getTime() {
         return time;
     }
 
-    public String getAction() {
+    public int getAction() {
         return action;
     }
 
-    public void setTime(Time time) {
+    public void setTime(Long time) {
         this.time = time;
     }
 
-    public void setAction(String action) {
+    public void setAction(int action) {
         this.action = action;
     }
+
 }

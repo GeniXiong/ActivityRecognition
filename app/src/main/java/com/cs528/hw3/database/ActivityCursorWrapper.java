@@ -14,9 +14,9 @@ public class ActivityCursorWrapper extends CursorWrapper {
     }
 
     public Action getAction() {
-        Time time = Time.valueOf(getString(getColumnIndex(ActivityTable.Cols.TIME)));
-        String act = getString(getColumnIndex(ActivityTable.Cols.ACTION));
 
+        Long time = getLong(getColumnIndex(ActivityTable.Cols.TIME));
+        int act = getInt(getColumnIndex(ActivityTable.Cols.ACTION));
         Action acti = new Action(time,act);
 
         return acti;
