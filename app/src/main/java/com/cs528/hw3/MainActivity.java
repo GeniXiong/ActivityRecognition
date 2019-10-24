@@ -21,7 +21,11 @@ import android.widget.Toast;
 import com.cs528.hw3.database.Action;
 import com.google.android.gms.location.ActivityTransition;
 import com.google.android.gms.location.DetectedActivity;
+<<<<<<< HEAD
 import com.google.android.gms.location.Geofence;
+=======
+import com.google.android.gms.location.LocationServices;
+>>>>>>> 41fa9754808401f8eed68599e74bf38051fbf6bc
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -52,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements
     private ImageView userActivity_img;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private GoogleMap mMap;
+
     private  Resources res;
     private ActionBL actionBL;
     private  MediaPlayer mediaPlayer;
@@ -95,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.current_location);
         mapFragment.getMapAsync(this);
+
 
         userAction = UserActionRecognation.getInstance(this);
 
@@ -246,6 +252,7 @@ public class MainActivity extends AppCompatActivity implements
 
         mMap.getUiSettings().setZoomControlsEnabled(true);
         mMap.setMinZoomPreference(11);
+        showDefaultLocation();
     }
 
     private void enableMyLocationIfPermitted() {
@@ -261,12 +268,16 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+
     private void showDefaultLocation() {
         Toast.makeText(this, "Location permission not granted, " +
                         "showing default location",
                 Toast.LENGTH_SHORT).show();
-        LatLng redmond = new LatLng(47.6739881, -122.121512);
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(redmond));
+
+        Location lastLocation = Utils.getBestLastKnownLocation(this);
+//        LatLng redmond = new LatLng(47.6739881, -122.121512);
+        LatLng last = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(last));
     }
 
     @Override
