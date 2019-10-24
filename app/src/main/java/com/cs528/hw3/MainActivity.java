@@ -21,11 +21,9 @@ import android.widget.Toast;
 import com.cs528.hw3.database.Action;
 import com.google.android.gms.location.ActivityTransition;
 import com.google.android.gms.location.DetectedActivity;
-<<<<<<< HEAD
+
 import com.google.android.gms.location.Geofence;
-=======
-import com.google.android.gms.location.LocationServices;
->>>>>>> 41fa9754808401f8eed68599e74bf38051fbf6bc
+
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -33,7 +31,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 
-import java.io.IOException;
+
 import java.util.Date;
 
 import androidx.annotation.NonNull;
@@ -42,7 +40,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import static android.os.Build.VERSION_CODES.M;
+
 
 public class MainActivity extends AppCompatActivity implements
         OnMapReadyCallback {
@@ -275,7 +273,6 @@ public class MainActivity extends AppCompatActivity implements
                 Toast.LENGTH_SHORT).show();
 
         Location lastLocation = Utils.getBestLastKnownLocation(this);
-//        LatLng redmond = new LatLng(47.6739881, -122.121512);
         LatLng last = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
         mMap.moveCamera(CameraUpdateFactory.newLatLng(last));
     }
