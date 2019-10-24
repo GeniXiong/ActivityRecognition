@@ -104,9 +104,11 @@ public class MainActivity extends AppCompatActivity implements
         broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Log.e("this","onReceive called");
+                Log.e("this","onReceive called "+intent.getAction());
                 if (intent.getAction().equals(Constants.BROADCAST_DETECTED_ACTIVITY)) {
+                    Log.e("this","onReceive activity called");
                     int type = intent.getIntExtra("type", -1);
+                    int tran = intent.getIntExtra("transition",-1);
                     Action action = actionBL.getAction();
                     if (action == null) {
                         Log.e("this","Action is null");
@@ -125,11 +127,13 @@ public class MainActivity extends AppCompatActivity implements
                                     .show();
                         }
                     }
-                    handleActivity(type);
+                    if(tran == ActivityTransition.ACTIVITY_TRANSITION_EXIT )
+                        handleActivity(type);
                 }
                 else if (intent.getAction().equals(Constants.BROADCAST_DETECTED_GEOFENCE)){
                     String geofence = intent.getStringExtra("geoID");
                     int transition = intent.getIntExtra("transition",-1);
+                    Log.e("this","onReceive Geo Fence called"+transition);
                     if(geofence.equalsIgnoreCase(Constants.GEOFENCE_ID_Fuller)&&transition == Geofence.GEOFENCE_TRANSITION_DWELL){
                         Toast.makeText(context,
                                 "You have been inside the Fuller Lab Geofence for 15 seconds, incrementing counter" ,
@@ -151,7 +155,6 @@ public class MainActivity extends AppCompatActivity implements
                         Log.e("this","Unexpected Geo Fence");
 
                     }
-
 
                 }
                 else{
@@ -195,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private PendingIntent getGeoFencePendingIntent() {
-        Intent intent = new Intent(this, ActivityIntentService.class);
+        Intent intent = new Intent(this, GeoFenceIntentService.class);
         return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 

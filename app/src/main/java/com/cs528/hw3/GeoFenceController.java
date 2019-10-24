@@ -24,7 +24,7 @@ public class GeoFenceController {
     private GeofencingClient geofencingClient;
     private List<Geofence> geofenceList = new ArrayList<Geofence>();
 
-    private static final float GEOFENCE_RADIUS = 50.0f; // in meters
+    private static final float GEOFENCE_RADIUS = 100.0f; // in meters
 
     private LatLng GORDON = new LatLng(42.274228, -71.806353);
     private LatLng FULLER = new LatLng(42.275122, -71.806497);
@@ -47,6 +47,7 @@ public class GeoFenceController {
     }
 
     public void startGeo(PendingIntent pendingIntent){
+        Log.d("Geo", "startGeofence request");
         geofencingClient.addGeofences(getGeofencingRequest(), pendingIntent)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -85,8 +86,9 @@ public class GeoFenceController {
     }
 
     private GeofencingRequest getGeofencingRequest() {
+        Log.d("Geo", "createGeofence request");
         GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL);
         builder.addGeofences(geofenceList);
         return builder.build();
     }
