@@ -31,7 +31,7 @@ public class StepCount implements SensorEventListener {
             sensorManager.registerListener(this,countSensor,SensorManager.SENSOR_DELAY_UI);
         }
         else {
-            Toast.makeText(context,"Cont sensor not available!",Toast.LENGTH_LONG).show();
+            Toast.makeText(context,"Step Cont sensor not available!",Toast.LENGTH_LONG).show();
         }
     }
 

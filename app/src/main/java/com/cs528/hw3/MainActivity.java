@@ -21,6 +21,7 @@ import android.widget.Toast;
 import com.cs528.hw3.database.Action;
 import com.google.android.gms.location.ActivityTransition;
 import com.google.android.gms.location.DetectedActivity;
+import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -44,6 +45,9 @@ public class MainActivity extends AppCompatActivity implements
 
     private BroadcastReceiver broadcastReceiver;
     private TextView userActivity;
+    private TextView gordonCount;
+    private TextView fullerCount;
+
     private UserActionRecognation userAction;
     private ImageView userActivity_img;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
@@ -54,6 +58,11 @@ public class MainActivity extends AppCompatActivity implements
     private static TextView stepView;
     private static Context context;
     private StepCount stepCount;
+
+    private static int fullerGeo = 0;
+    private static int gordonGeo = 0;
+
+    private GeoFenceController geoFenceController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +75,10 @@ public class MainActivity extends AppCompatActivity implements
 
         userActivity = findViewById(R.id.currentAction);
         stepView = findViewById(R.id.stepCount);
+        fullerCount = findViewById(R.id.visitFuller);
+        gordonCount = findViewById(R.id.visitLibrary);
+
+
 
         mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.beat_02);
 
@@ -75,12 +88,17 @@ public class MainActivity extends AppCompatActivity implements
         userActivity_img.setImageDrawable(res.getDrawable(R.drawable.still));
 
         userActivity.setText(getText(R.string.activity_status)+" Still");
+        stepView.setText(getText(R.string.step_count)+" 0");
+        fullerCount.setText(getText(R.string.fuller_geo)+" 0");
+        gordonCount.setText(getText(R.string.library_geo)+" 0");
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.current_location);
         mapFragment.getMapAsync(this);
 
         userAction = UserActionRecognation.getInstance(this);
+
+        geoFenceController = GeoFenceController.getInstance(this);
 
 
         broadcastReceiver = new BroadcastReceiver() {
@@ -109,6 +127,36 @@ public class MainActivity extends AppCompatActivity implements
                     }
                     handleActivity(type);
                 }
+                else if (intent.getAction().equals(Constants.BROADCAST_DETECTED_GEOFENCE)){
+                    String geofence = intent.getStringExtra("geoID");
+                    int transition = intent.getIntExtra("transition",-1);
+                    if(geofence.equalsIgnoreCase(Constants.GEOFENCE_ID_Fuller)&&transition == Geofence.GEOFENCE_TRANSITION_DWELL){
+                        Toast.makeText(context,
+                                "You have been inside the Fuller Lab Geofence for 15 seconds, incrementing counter" ,
+                                Toast.LENGTH_LONG)
+                                .show();
+                        fullerGeo++;
+                        fullerCount.setText(getText(R.string.fuller_geo)+" "+fullerGeo);
+                    }
+                    else if(geofence.equalsIgnoreCase(Constants.GEOFENCE_ID_GORDON)&&transition == Geofence.GEOFENCE_TRANSITION_DWELL){
+                        Toast.makeText(context,
+                                "You have been inside the Gordon Library Geofence for 15 seconds, incrementing counter" ,
+                                Toast.LENGTH_LONG)
+                                .show();
+                        gordonGeo++;
+                        gordonCount.setText(getText(R.string.library_geo)+" "+gordonGeo);
+
+                    }
+                    else{
+                        Log.e("this","Unexpected Geo Fence");
+
+                    }
+
+
+                }
+                else{
+                    Log.e("this","Unexpected intent in onReceive");
+                }
             }
         };
     }
@@ -120,12 +168,17 @@ public class MainActivity extends AppCompatActivity implements
 
         stepCount.startSensor();
 
-
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
                 new IntentFilter(Constants.BROADCAST_DETECTED_ACTIVITY));
+
         PendingIntent pendingIntent = getActivityDetectionPendingIntent();
         userAction.start(pendingIntent);
 
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
+                new IntentFilter(Constants.BROADCAST_DETECTED_GEOFENCE));
+
+        PendingIntent pendingIntentGeo = getGeoFencePendingIntent();
+        geoFenceController.startGeo(pendingIntentGeo);
 
     }
 
@@ -137,6 +190,11 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private PendingIntent getActivityDetectionPendingIntent() {
+        Intent intent = new Intent(this, ActivityIntentService.class);
+        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    private PendingIntent getGeoFencePendingIntent() {
         Intent intent = new Intent(this, ActivityIntentService.class);
         return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
