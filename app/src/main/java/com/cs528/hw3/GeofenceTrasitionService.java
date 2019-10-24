@@ -22,13 +22,30 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
 public class GeofenceTrasitionService extends IntentService {
     private static final String TAG = GeofenceTrasitionService.class.getSimpleName();
     public static final int GEOFENCE_NOTIFICATION_ID = 0;
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Log.d("GeoTrasition", ">>>onCreate()");
+    }
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, startId, startId);
+        Log.i("GeoTrasition", "Received start id " + startId + ": " + intent);
 
+        return START_STICKY;
+    }
     public GeofenceTrasitionService() {
         super(TAG);
     }
@@ -36,12 +53,13 @@ public class GeofenceTrasitionService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         // Retrieve the Geofencing intent
+        Log.e( "geohandle", "come to handle" );
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
 
         // Handling errors
         if ( geofencingEvent.hasError() ) {
             String errorMsg = getErrorString(geofencingEvent.getErrorCode() );
-            Log.e( TAG, errorMsg );
+            Log.e( "geohandle", errorMsg );
             return;
         }
 
@@ -56,6 +74,8 @@ public class GeofenceTrasitionService extends IntentService {
             String geofenceTransitionDetails = getGeofenceTrasitionDetails(geoFenceTransition, triggeringGeofences );
             // Send notification details as a String
             sendNotification( geofenceTransitionDetails );
+
+
         }
     }
 
@@ -119,3 +139,4 @@ public class GeofenceTrasitionService extends IntentService {
         }
     }
 }
+

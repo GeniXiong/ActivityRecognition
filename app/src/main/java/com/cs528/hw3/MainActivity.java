@@ -17,9 +17,16 @@ import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Result;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.DetectedActivity;
+import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
+import com.google.android.gms.location.GeofencingRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -28,12 +35,16 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 public class MainActivity extends AppCompatActivity implements
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        ResultCallback<Status>,
         OnMapReadyCallback {
 
     private BroadcastReceiver broadcastReceiver;
@@ -42,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private GoogleMap mMap;
-    private GeoHelper helper;
+    private GoogleApiClient googleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,14 +79,19 @@ public class MainActivity extends AppCompatActivity implements
             }
         };
         checkLocationPermission();
-        Log.i("this","helper start");
-        helper = new GeoHelper();
-        helper.GeoConstructor(this);
-        helper.addGeofence(this);
-        Log.i("this","helper end");
+        createGoogleApi();
     }
     ///////////////
-
+    private void createGoogleApi() {
+        Log.d("Geo", "createGoogleApi()");
+        if ( googleApiClient == null ) {
+            googleApiClient = new GoogleApiClient.Builder( this )
+                    .addConnectionCallbacks( this )
+                    .addOnConnectionFailedListener( this )
+                    .addApi( LocationServices.API )
+                    .build();
+        }
+    }
     /////test//////
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
@@ -116,15 +132,6 @@ public class MainActivity extends AppCompatActivity implements
             return false;
         } else {
             return true;
-        }
-    }
-    public void onResult(@NonNull Status status) {
-        Log.i("Geo Translation", "onResult: " + status);
-        if ( status.isSuccess() ) {
-            Log.i("Geo Translation", "success");
-        } else {
-            // inform about fail
-            Log.i("Geo Translation", "failure");
         }
     }
     //////////////////////////////////////////////////
@@ -258,4 +265,98 @@ public class MainActivity extends AppCompatActivity implements
                 }
             };
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        // Call GoogleApiClient connection when starting the Activity
+        googleApiClient.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        // Disconnect GoogleApiClient when stopping Activity
+        googleApiClient.disconnect();
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.i("Geo", "onConnected()");
+        startGeofence();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Log.w("Geo", "onConnectionSuspended()");
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.w("Geo", "onConnectionFailed()");
+    }
+    private static final long GEO_DURATION = -1;
+    private static final String GEOFENCE_REQ_ID = "My Geofence";
+    private static final float GEOFENCE_RADIUS = 5000000000.0f; // in meters
+
+    // Create a Geofence
+    private Geofence createGeofence(LatLng latLng, float radius ) {
+        Log.d("Geo", "createGeofence");
+        return new Geofence.Builder()
+                .setRequestId(GEOFENCE_REQ_ID)
+                .setCircularRegion( latLng.latitude, latLng.longitude, radius)
+                .setExpirationDuration( GEO_DURATION )
+                .setTransitionTypes( Geofence.GEOFENCE_TRANSITION_ENTER
+                        | Geofence.GEOFENCE_TRANSITION_DWELL )
+                .setLoiteringDelay (15)
+                .build();
+    }
+    private GeofencingRequest createGeofenceRequest(Geofence geofence ) {
+        Log.d("GeoRequest", "createGeofenceRequest");
+        return new GeofencingRequest.Builder()
+                .setInitialTrigger( GeofencingRequest.INITIAL_TRIGGER_ENTER )
+                .addGeofence( geofence )
+                .build();
+    }
+    private PendingIntent geoFencePendingIntent;
+    private final int GEOFENCE_REQ_CODE = 0;
+
+    // Add the created GeofenceRequest to the device's monitoring list
+    private void addGeofence(GeofencingRequest request) {
+        Log.d("Geo", "addGeofence");
+            LocationServices.GeofencingApi.addGeofences(
+                    googleApiClient,
+                    request,
+                    createGeofencePendingIntent()
+            ).setResultCallback(this);
+    }
+    private PendingIntent createGeofencePendingIntent() {
+        Log.d("Geo PendingI", "createGeofencePendingIntent");
+        if ( geoFencePendingIntent != null )
+            return geoFencePendingIntent;
+
+        Intent intent = new Intent( this, GeofenceTrasitionService.class);
+        return PendingIntent.getService(
+                this, GEOFENCE_REQ_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT );
+    }
+
+    private void startGeofence() {
+        Log.i("Geo", "startGeofence()");
+            LatLng gordonLib = new LatLng(42.274228, -71.806353);
+            Geofence geofence = createGeofence(gordonLib, GEOFENCE_RADIUS);
+            GeofencingRequest geofenceRequest = createGeofenceRequest( geofence );
+            addGeofence( geofenceRequest );
+    }
+
+    @Override
+    public void onResult(@NonNull Status status) {
+        Log.i("Geo Translation", "onResult: " + status);
+        if ( status.isSuccess() ) {
+            Log.e("Geo Translation", "success");
+        } else {
+            // inform about fail
+            Log.i("Geo Translation", "failure");
+        }
+    }
 }
